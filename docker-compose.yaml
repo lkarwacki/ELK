@@ -1,0 +1,68 @@
+version: '3'
+
+services:
+  kibana:
+    build: kibana/
+    container_name: elk-kibana
+    ports: 
+      - "80:5601"
+    depends_on: 
+      - elasticsearch
+    environment:
+      xpack.graph.enabled: "false"
+      xpack.ml.enabled: "false"
+      xpack.monitoring.enabled: "false"
+      xpack.reporting.enabled: "false"
+      xpack.security.enabled: "false"
+      server.name: kibana
+      server.host: "0"
+      elasticsearch.url: http://elasticsearch:9200
+    networks:
+      - elk
+
+  elasticsearch:
+    build: elasticsearch/
+    container_name: elk-elasticsearch
+    environment:
+      cluster.name: "docker-cluster"
+      network.host: 0.0.0.0
+      discovery.zen.minimum_master_nodes: 1
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      xpack.graph.enabled: "false"
+      xpack.ml.enabled: "false"
+      xpack.monitoring.enabled: "false"
+      xpack.security.enabled: "false"
+      xpack.watcher.enabled: "false"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - elk
+
+  logstash:
+    build: logstash/
+    container_name: elk-logstash
+    ports:
+      - "5000:5000"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+      http.host: "0.0.0.0"
+      path.config: /usr/share/logstash/pipeline
+      xpack.monitoring.enabled: "false"
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+
+networks:
+  elk:
+    driver: bridge
+
+volumes:
+  elasticsearch-data:
+    driver: local
