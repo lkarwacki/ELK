@@ -5,7 +5,7 @@ services:
     build: kibana/
     container_name: elk-kibana
     ports: 
-      - "80:5601"
+      - "8080:5601"
     depends_on: 
       - elasticsearch
     environment:
@@ -54,6 +54,7 @@ services:
       xpack.monitoring.enabled: "false"
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logstash/patterns:/opt/logstash/patterns
     networks:
       - elk
     depends_on:
